@@ -93,16 +93,20 @@
             intel: 10,
             charm: 10,
             energy: 10
-        }
+        };
 
         const events = [
-            // ... 之前的事件（省略）
             {
-                condition: s => Math.random() < 0.01,
-                text: ["被夺舍身体，失去自我", "变成皮物，无法反抗", "被不明生物占据身体", "被他人控制身体，失去自由", "被他人的身体所替代"],
+                condition: s => Math.random() < 0.28, // 将坏结局几率设置为28%
+                text: [
+                    "被夺舍身体，失去自我",
+                    "变成皮物，无法反抗",
+                    "被不明生物占据身体",
+                    "被他人控制身体，失去自由",
+                    "被他人的身体所替代"
+                ],
                 effect: { charm: -5, intel: -5, stamina: -5, energy: -5 }
             },
-            // 大约 20 条新事件
             {
                 condition: () => true,
                 text: ["遇到了友善的新朋友", "获得了一本新书籍", "家庭聚会中非常开心"],
@@ -167,8 +171,8 @@
                 condition: s => s.age > 8 && s.energy < 4,
                 text: ["因为体力不足而被排除在活动外", "因缺乏锻炼而感到疲惫"],
                 effect: { stamina: -2, energy: -1 }
-            },
-            // 继续添加更多的事件
+            }
+            // 可以继续添加更多的事件
         ];
 
         function startGame() {
@@ -180,19 +184,29 @@
         function nextYear() {
             state.age++;
             if (state.age >= 12) return endGame();
-            
+
             updateStatus();
             triggerEvent();
             document.getElementById("age").textContent = state.age;
         }
 
+        function updateStatus() {
+            Object.entries(state).forEach(([key, value]) => {
+                document.getElementById(key).textContent = value;
+            });
+        }
+
         function triggerEvent() {
             const validEvents = events.filter(e => e.condition(state));
-            const randomEvent = validEvents[Math.floor(Math.random() * validEvents.length)];
-            const eventText = randomEvent.text[Math.floor(Math.random() * randomEvent.text.length)];
-            
-            addLog(`🎈 ${state.age}岁: ${eventText}`);
-            applyEffect(randomEvent.effect);
+            if (validEvents.length > 0) {
+                const randomEvent = validEvents[Math.floor(Math.random() * validEvents.length)];
+                const eventText = randomEvent.text[Math.floor(Math.random() * randomEvent.text.length)];
+
+                addLog(`🎈 ${state.age}岁: ${eventText}`);
+                applyEffect(randomEvent.effect);
+            } else {
+                addLog(`🎈 ${state.age}岁: 没有发生事件。`);
+            }
         }
 
         function applyEffect(effect) {
@@ -219,7 +233,7 @@
             if (state.charm < 0 || state.intel < 0 || state.stamina < 0 || state.energy < 0) {
                 ending = "被夺舍身体，失去了自我";
             }
-            
+
             addLog(`🎉 结局：${ending}`);
             setTimeout(restart, 2000);
         }
@@ -227,7 +241,7 @@
         function restart() {
             state = { age: 0, stamina: 10, intel: 10, charm: 10, energy: 10 };
             document.getElementById("log").innerHTML = "";
-            document.querySelectorAll(".status span").forEach(el => el.textContent = 10);
+            updateStatus();
             document.getElementById("age").textContent = 0;
             startGame();
         }
